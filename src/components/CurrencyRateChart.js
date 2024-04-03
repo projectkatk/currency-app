@@ -1,9 +1,8 @@
 import { Line } from "react-chartjs-2"
-import { DateTime } from "luxon";
 import 'chartjs-adapter-date-fns';
 import '../scss/custom.scss';
 import '../scss/CurrencyRateChart.scss';
-import { Button, Card, ToggleButton, ButtonGroup } from "react-bootstrap"
+import { Card, ToggleButton } from "react-bootstrap"
 import { useState, useRef, useEffect } from "react"
 import {
     Chart as ChartJS,
@@ -43,8 +42,6 @@ const CurrencyRateChart = (props) => {
     const [rateData, setRateData] = useState({})
 
     const [radioValue, setRadioValue] = useState('');
-    const [value, setValue] = useState(0)
-
 
     const [chartData, setChartData] = useState({
         datasets: [{
@@ -72,7 +69,7 @@ const CurrencyRateChart = (props) => {
                 }]
             })
         })    
-    },[pastDateValue, props.data.baseSelected, props.data.targetSelected ])
+    },[rateArray, startISOString, pastDateValue, props.data.baseSelected, props.data.targetSelected ])
 
     const dataToRender = (pastDateData) => {
         let days = []
@@ -257,7 +254,6 @@ const CurrencyRateChart = (props) => {
             </div>
             <Line
                 id="fxRateChart"
-                className={value}
                 refs="chart"
                 options={options}
                 data={chartData}

@@ -71,12 +71,12 @@ const CurrencyConverter = (props) => {
                                     if(key !== targetSelected) {
                                         return (
                                             <Dropdown.Item onClick={() => handleBaseSelection(key)} key={key}>
-                                                <div className={`currency-flag currency-flag-${key}`}></div>
                                                 <b>{key} </b>
                                                 {value}
                                             </Dropdown.Item>
                                         )
-                                    }                                
+                                    }
+                                    return                          
                                 })
                             }
                         </DropdownButton>
