@@ -1,0 +1,21 @@
+#dropdown-target-button,
+#dropdown-basic-button,
+.formInput {
+    width: 200px;
+}
+
+.formInput.form-control {
+    width: 200px;
+}
+
+.swap-pointer {
+    cursor: pointer;
+}
+
+.swap-pointer:hover {
+    transform: scale(1.1);
+    color: #a01073;
+}
+.swap-pointer:active {
+    color: #b8c924;
+}
