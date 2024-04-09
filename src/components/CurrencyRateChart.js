@@ -41,7 +41,7 @@ const CurrencyRateChart = (props) => {
     const [pastDateValue, setPastDateValue] = useState(daysPriorISOString14Days)
     const [rateData, setRateData] = useState({})
 
-    const [radioValue, setRadioValue] = useState('');
+    const [radioValue, setRadioValue] = useState('1');
 
     const [chartData, setChartData] = useState({
         datasets: [{
@@ -49,43 +49,63 @@ const CurrencyRateChart = (props) => {
             data: [{
                 x: [],
                 y: null,
-                display: false
+                display: false,
+                borderColor: 'transparent'
             }],
         }]
     })
-
-    const [rateArray, setRateArray] = useState([])
+    
     const host = "api.frankfurter.app"
     useEffect(() => {
         fetch(`https://${host}/${pastDateValue}..${startISOString}?amount=1&from=${props.data.baseSelected}&to=${props.data.targetSelected}`)
         .then((res) => res.json())
         .then((data) => {
+            let days = []
             setRateData(data)
-            setRadioValue("")
-            setChartData({
-                datasets: [{
-                    label: "",
-                    data: rateArray
-                }]
-            })
-        })    
-    },[rateArray, startISOString, pastDateValue, props.data.baseSelected, props.data.targetSelected ])
 
-    const dataToRender = (pastDateData) => {
-        let days = []
-        if (rateData && rateData.rates) {
-            setRateArray(Object.entries(rateData.rates).forEach(([key, value]) => {
+            // capture the data rates as updated and add to the days array for updating datasets
+            Object.entries(data.rates).forEach(([key, value]) => {
                 days.push({
                     x: Date.parse(key),
                     y: Object.values(value)[0]
                 })
-            }))
-            setPastDateValue(pastDateData)
-
+            })
             return days
-        }
-    }
+        })
+        .then((days) => {
+            // render the graph based on the dynamic dataset data
+            setChartData({
+                datasets: [{
+                    label: "",
+                    data: days,
+                    borderColor: 'rgb(160, 16, 115)',
+                    borderWidth: 3,
+                    pointStyle: false
+                }]
+            })
+            
+            // to ensure the correct dynamic legend is updated
+            setOptions({
+                ...{
+                    plugins: {
+                        legend: {
+                            display: false,
+                        },
+                        title: {
+                            display: true,
+                            text:  props.data.baseSelected + " to " + props.data.targetSelected
+                        },
+                        tooltip: {
+                            enabled: true
+                        }
+                    }
+                }
+            })            
+        })
+        
+    },[radioValue, startISOString, pastDateValue, props.data.baseSelected, props.data.targetSelected ])
 
+    // basis option value
     const [options, setOptions] = useState({
         responsive: true,
         maintainAspectRatio: true,
@@ -106,24 +126,29 @@ const CurrencyRateChart = (props) => {
         },
         plugins: {
             legend: {
-                position: 'top'
+                display: false,
             },
             title: {
                 display: true,
-                text:  "Foreign Exchange Rate"
+                text:  props.data.baseSelected + " to " + props.data.targetSelected + " rate"
             },
             tooltip: {
                 enabled: true
             }
         }
     })
+
+    
+
     const dynamicChartData = (datasetsData, label, time) => {
         // chart data dynamically changes based on the timeseries button click
         setChartData({
             datasets: [{
                 label,
                 data: datasetsData,
-                borderColor: 'rgb(75, 192, 192)',
+                display: false,
+                borderColor: 'transparent',
+                pointStyle: false,
                 tension: 0.1
             }]
         })
@@ -132,18 +157,38 @@ const CurrencyRateChart = (props) => {
         setOptions({
             ...{
                 scales: {
-                x: {
-                    type: 'timeseries',
-                    time
+                    x: {
+                        type: 'timeseries',
+                        time
+                    },
+                    y: {
+                        beginAtZero: false
+                    }
                 },
-                y: {
-                    beginAtZero: false
+                plugins: {
+                    legend: {
+                        display: false,
+                    },
+                    title: {
+                        display: true,
+                        text:  props.data.baseSelected + " to " + props.data.targetSelected
+                    },
+                    tooltip: {
+                        enabled: true
+                    }
                 }
-                },
             }
         })
     }
 
+    // capture the date value from the event calling below and set the new past date
+    const dataToRender = (pastDateData) => {
+        if (rateData && rateData.rates) {
+            setPastDateValue(pastDateData)
+        }
+    }
+
+    // 14 days - calling this and changing the radio value and render chart dynamically
     const changeToDaily = (e) => {
         setRadioValue(e.target.value)
 
@@ -160,7 +205,7 @@ const CurrencyRateChart = (props) => {
             }
         )
     }
-
+    // 6 months - calling this and changing the radio value and render chart dynamically
     const changeTo6Mths = (e) => {
         setRadioValue(e.target.value)
 
@@ -171,13 +216,14 @@ const CurrencyRateChart = (props) => {
                 time: {
                     unit: 'week',
                     displayFormats: {
-                        week: 'dd LLL',
+                        week: 'MM yyyy',
                     }
                 }
             }
         )        
     }
 
+    // 1 year - calling this and changing the radio value and render chart dynamically
     const changeToFullYear = (e) => {
         setRadioValue(e.target.value)
 
@@ -202,8 +248,7 @@ const CurrencyRateChart = (props) => {
         { name: '1 year', value: '3'},
     ]
 
-    // ensure the correct functions are called on toggle button change
- 
+    // ensure the correct functions are called on toggle button change 
     const callChartEventByName = (e, radio) => {        
         if (radio.value === "1") {
             changeToDaily(e)
@@ -216,6 +261,7 @@ const CurrencyRateChart = (props) => {
         }
     }
 
+    // Resizing chart
     const myChart = useRef("chart")
 
     window.addEventListener('beforeprint', () => {
@@ -228,30 +274,30 @@ const CurrencyRateChart = (props) => {
 
     return (
         <>  
-            <div >
-            <Card className="d-flex text-primary border-info flex-column flex-md-row gap-3 p-3 mx-4 justify-content-between align-items-center my-4">
-                <div className="fw-semibold">Trend by Timeline</div>
-                <div className="d-flex flex-wrap justify-content-center flex-md-row gap-2">
-                    { chartDataRadio.map((radio, idx) => {
-                        return (
-                            <ToggleButton
-                                key={idx}
-                                id={`radio-${idx}`}
-                                type="radio"
-                                variant='outline-info'
-                                size="sm"
-                                name="radio"
-                                value={radio.value}
-                                checked={radioValue === radio.value}
-                                onChange={(e) => callChartEventByName(e, radio)}
-                            >
-                                {radio.name}
-                            </ToggleButton>                            
-                        )
-                    })}
-                </div>
-            </Card>                
-            </div>
+            {/* <div > */}
+                <Card className="d-flex text-primary border-info flex-column flex-md-row gap-3 p-3 mx-4 justify-content-between align-items-center my-4">
+                    <div className="fw-semibold">Trend by Timeline</div>
+                    <div className="d-flex flex-wrap justify-content-center flex-md-row gap-2">
+                        { chartDataRadio.map((radio, idx) => {
+                            return (
+                                <ToggleButton
+                                    key={idx}
+                                    id={`radio-${idx}`}
+                                    type="radio"
+                                    variant='outline-info'
+                                    size="sm"
+                                    name="radio"
+                                    value={radio.value}
+                                    checked={radioValue === radio.value}
+                                    onChange={(e) => callChartEventByName(e, radio)}
+                                >
+                                    {radio.name}
+                                </ToggleButton>                            
+                            )
+                        })}
+                    </div>
+                </Card>                
+            {/* </div> */}
             <Line
                 id="fxRateChart"
                 refs="chart"
