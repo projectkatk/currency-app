@@ -102,6 +102,7 @@ const CurrencyRateChart = (props) => {
                 }
             })            
         })
+        .catch(error => console.error(error.message))
         
     },[radioValue, startISOString, pastDateValue, props.data.baseSelected, props.data.targetSelected ])
 
